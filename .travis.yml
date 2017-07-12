@@ -18,6 +18,7 @@ cache:
 script:
     - cargo build
     - cargo test
+    - '[ $TRAVIS_RUST_VERSION != nightly ] || cargo bench'
 
 addons:
   apt:
