@@ -2,5 +2,16 @@
 name = "parsip"
 version = "0.1.0"
 authors = ["Kamil Markiewicz <k.a.markiewicz@gmail.com>"]
+license = "MIT"
+description = "A tiny, safe, speedy, zero-copy SIP parser. Uses nom."
+repository = "https://github.com/kamarkiewicz/parsip"
+documentation = "https://kamarkiewicz.github.io/parsip"
+keywords = ["sip", "parser"]
+categories = ["network-programming", "parser-implementations"]
 
-[dependencies]
+[features]
+default = ["std"]
+std = []
+
+[dependencies.nom]
+version = "^3.1"
