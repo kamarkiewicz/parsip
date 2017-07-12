@@ -1,4 +1,4 @@
-use nom::{digit, space, line_ending, crlf, rest};
+use nom::{digit, is_space, line_ending, crlf, rest};
 use core::{str, slice};
 
 /// A Result of any parsing action.
@@ -454,12 +454,20 @@ fn header_value(buf: &[u8]) -> IResult<&[u8], &[u8]> {
 }
 
 /// > ```notrust
-/// > header  =  "header-name" HCOLON header-value *(COMMA header-value)
 /// > HCOLON  =  *( SP / HTAB ) ":" SWS
 /// > ```
-named!(message_header(&[u8]) -> Header, do_parse!(
+named!(hcolon<char>, delimited!(
+    take_while!(is_space),
+    char!(':'),
+    take_while!(is_space)
+));
+
+/// > ```notrust
+/// > header  =  "header-name" HCOLON header-value *(COMMA header-value)
+/// > ```
+named!(message_header<Header>, do_parse!(
     n: header_name  >>
-    delimited!(opt!(space), char!(':'), opt!(space)) >>
+    hcolon >>
     v: header_value >>
     crlf >>
     (Header{ name: n, value: v })
