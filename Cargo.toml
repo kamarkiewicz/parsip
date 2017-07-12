@@ -1,0 +1,6 @@
+[package]
+name = "parsip"
+version = "0.1.0"
+authors = ["Kamil Markiewicz <k.a.markiewicz@gmail.com>"]
+
+[dependencies]
