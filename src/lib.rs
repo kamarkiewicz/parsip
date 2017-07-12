@@ -7,11 +7,13 @@
 //! A push library for parsing SIP requests and responses.
 //!
 
-#[cfg(feature = "std")]
-extern crate std as core;
-
 #[macro_use]
 extern crate nom;
+
+#[cfg(not(feature = "std"))]
+mod std {
+    pub use core::*;
+}
 
 mod sip;
 

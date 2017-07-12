@@ -1,5 +1,5 @@
 use nom::{digit, is_space, line_ending, crlf, rest};
-use core::{str, slice};
+use std::{str, slice};
 
 /// A Result of any parsing action.
 ///
