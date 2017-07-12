@@ -289,7 +289,7 @@ pub struct Header<'a> {
 /// # Example
 ///
 /// ```
-///# #[allow(unused_variables)]
+///# #![allow(unused_variables)]
 /// let headers = [parsip::EMPTY_HEADER; 64];
 /// ```
 pub const EMPTY_HEADER: Header<'static> = Header {
