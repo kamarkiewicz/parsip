@@ -5,7 +5,7 @@ authors = ["Kamil Markiewicz <k.a.markiewicz@gmail.com>"]
 license = "MIT"
 description = "A tiny, safe, speedy, zero-copy SIP parser. Uses nom."
 repository = "https://github.com/kamarkiewicz/parsip"
-documentation = "https://kamarkiewicz.github.io/parsip"
+documentation = "https://docs.rs/parsip"
 keywords = ["sip", "parser"]
 categories = ["network-programming", "parser-implementations"]
 
