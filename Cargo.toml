@@ -11,10 +11,11 @@ categories = ["network-programming", "parser-implementations"]
 
 [features]
 default = ["std"]
-std = []
+std = ["nom/std"]
 
 [dependencies.nom]
 version = "^3.1"
+default-features = false
 
 [profile.bench]
 lto = true
