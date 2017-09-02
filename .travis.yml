@@ -1,33 +1,21 @@
 language: rust
 sudo: false
 dist: trusty
-matrix:
-    fast_finish: true
-    include:
-        - rust: nightly
-        - rust: beta
-        - rust: stable
-        - rust: 1.10.0
 
-cache:
-    apt: true
-    directories:
-        - target/debug/deps
-        - target/debug/build
+rust:
+  - nightly
+  - beta
+  - stable
+  - 1.10.0
+matrix:
+  fast_finish: true
+
+cache: cargo
 
 script:
-    - cargo build
-    - cargo test
-    - '[ $TRAVIS_RUST_VERSION != nightly ] || cargo bench'
-
-addons:
-  apt:
-    packages:
-      - libcurl4-openssl-dev
-      - libelf-dev
-      - libdw-dev
-      - binutils-dev
-      - libiberty-dev
+  - cargo build --verbose
+  - cargo test --verbose
+  - '[ $TRAVIS_RUST_VERSION != nightly ] || cargo bench'
 
 after_success:
   - '[ $TRAVIS_RUST_VERSION = stable ] &&
@@ -44,3 +32,12 @@ after_success:
       fi;
     done &&
     kcov --coveralls-id=$TRAVIS_JOB_ID --merge target/cov target/cov/*'
+
+addons:
+  apt:
+    packages:
+      - libcurl4-openssl-dev
+      - libelf-dev
+      - libdw-dev
+      - binutils-dev
+      - libiberty-dev
