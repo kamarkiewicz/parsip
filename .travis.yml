@@ -19,6 +19,10 @@ before_cache:
   # Travis can't cache files that are not readable by "others"
   - chmod -R a+r $HOME/.cargo
 
+before_script: |
+  (which cargo-coverage || cargo install cargo-travis) &&
+  export PATH=$HOME/.cargo/bin:$PATH
+
 script:
   - cargo build --verbose
   - cargo test --verbose
@@ -30,20 +34,12 @@ script:
       git remote update
       git checkout -b master origin/master
       cargo bench --verbose | tee benches-control
-      which cargo-benchcmp || cargo install cargo-benchcmp
+      (which cargo-benchcmp || cargo install cargo-benchcmp)
       cargo benchcmp benches-control benches-variable
     fi
 
 after_success: |
-  set -e
-  wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz
-  tar xzf master.tar.gz && mkdir kcov-master/build && cd kcov-master/build
-  cmake .. && make && make install DESTDIR=../../kcov-build && cd ../..
-  RUSTFLAGS="-C link-dead-code" cargo test --no-run
-  for file in target/debug/parsip-*[^\.d]; do
-    mkdir -p "target/cov/$(basename $file)";
-    ./kcov-build/usr/local/bin/kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file";
-  done
+  cargo coverage -m ../kcov &&
   bash <(curl -s https://codecov.io/bash)
 
 addons:
