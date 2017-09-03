@@ -15,7 +15,17 @@ cache: cargo
 script:
   - cargo build --verbose
   - cargo test --verbose
-  - '[ $TRAVIS_RUST_VERSION != nightly ] || cargo bench'
+  - |
+    set -e
+    if [ "${TRAVIS_PULL_REQUEST_BRANCH:-$TRAVIS_BRANCH}" != "master" ] && [ $TRAVIS_RUST_VERSION == nightly ]; then
+      cargo bench --verbose | tee benches-variable
+      git config remote.origin.fetch "+refs/heads/master:refs/remotes/origin/master"
+      git remote update
+      git checkout -b master origin/master
+      cargo bench --verbose | tee benches-control
+      which cargo-benchcmp || cargo install cargo-benchcmp
+      cargo benchcmp benches-control benches-variable
+    fi
 
 after_success: |
   set -e
