@@ -9,6 +9,8 @@ rust:
   - 1.10.0
 matrix:
   fast_finish: true
+  allow_failures:
+    - rust: nightly
 
 cache:
   apt: true
