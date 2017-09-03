@@ -10,7 +10,12 @@ rust:
 matrix:
   fast_finish: true
 
-cache: cargo
+cache:
+  apt: true
+  cargo: true
+before_cache:
+  # Travis can't cache files that are not readable by "others"
+  - chmod -R a+r $HOME/.cargo
 
 script:
   - cargo build --verbose
