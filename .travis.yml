@@ -1,5 +1,5 @@
 language: rust
-sudo: false
+sudo: required
 dist: trusty
 
 rust:
@@ -9,6 +9,7 @@ rust:
 matrix:
   fast_finish: true
 
+
 cache:
   apt: true
   cargo: true
@@ -16,9 +17,23 @@ before_cache:
   # Travis can't cache files that are not readable by "others"
   - chmod -R a+r $HOME/.cargo
 
-before_script: |
-  (which cargo-coverage || cargo install cargo-travis) &&
-  export PATH=$HOME/.cargo/bin:$PATH
+# Dependencies of kcov, used by coverage
+addons:
+  apt:
+    packages:
+      - libcurl4-openssl-dev
+      - libelf-dev
+      - libdw-dev
+      - binutils-dev
+      - cmake # also required for cargo-update
+    sources:
+      - kalakris-cmake
+
+before_script:
+  - export PATH=$HOME/.cargo/bin:$PATH
+  - which cargo-install-update || cargo install cargo-update
+  - which cargo-coverage || cargo install cargo-travis
+  - cargo install-update -a # update outdated cached binaries
 
 script:
   - cargo build --verbose
@@ -35,15 +50,6 @@ script:
       cargo benchcmp benches-control benches-variable
     fi
 
-after_success: |
-  cargo coverage -m ../kcov &&
-  bash <(curl -s https://codecov.io/bash)
-
-addons:
-  apt:
-    packages:
-      - libcurl4-openssl-dev
-      - libelf-dev
-      - libdw-dev
-      - binutils-dev
-      - libiberty-dev
+after_success:
+  # measure code coverage and upload to codecov.io
+  - cargo coverage -m ../kcov && bash <(curl -s https://codecov.io/bash)

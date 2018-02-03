@@ -1,5 +1,6 @@
 #![cfg_attr(not(feature = "std"),  no_std)]
-#![cfg_attr(test, deny(warnings))]
+// FIXME: unnecessary parentheses around function argument caused by do_parse!
+// #![cfg_attr(test, deny(warnings))]
 #![deny(missing_docs)]
 #![deny(dead_code)]
 //! # parsip
