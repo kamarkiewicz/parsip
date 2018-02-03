@@ -419,7 +419,6 @@ named!(#[inline], header_name<&[u8], &str>,
 /// Header value may be empty!
 ///
 fn header_value(buf: &[u8]) -> IResult<&[u8], &[u8]> {
-    use self::IResult::*;
 
     let mut end_pos = 0;
     let mut idx = 0;
@@ -428,7 +427,7 @@ fn header_value(buf: &[u8]) -> IResult<&[u8], &[u8]> {
             b'\n' => {
                 idx += 1;
                 if idx >= buf.len() {
-                    return Incomplete(Needed::Size(1));
+                    return Err(Err::Incomplete(Needed::Size(1)));
                 }
                 match buf[idx] {
                     b' ' | b'\t' => {
@@ -436,21 +435,21 @@ fn header_value(buf: &[u8]) -> IResult<&[u8], &[u8]> {
                         continue;
                     }
                     _ => {
-                        return Done(&buf[end_pos..], &buf[..end_pos]);
+                        return Ok((&buf[end_pos..], &buf[..end_pos]));
                     }
                 }
             }
             b' ' | b'\t' | b'\r' => {}
             b => {
                 if !is_header_value(b) {
-                    return Error(error_position!(ErrorKind::Custom(b as u32), buf));
+                    return Err(Err::Error(error_position!(buf, ErrorKind::Custom(b as u32))));
                 }
                 end_pos = idx + 1;
             }
         }
         idx += 1;
     }
-    Done(&b""[..], buf)
+    Ok((&b""[..], buf))
 }
 
 /// > ```notrust
@@ -494,14 +493,15 @@ named!(message_header<Header>, do_parse!(
 pub fn parse_headers<'b: 'h, 'h>(mut input: &'b [u8],
                                  mut headers: &'h mut [Header<'b>])
                                  -> IResult<&'b [u8], &'h [Header<'b>]> {
-    use self::IResult::*;
     let mut i = 0;
     while i < headers.len() {
         match crlf(input) {
-            Done(_, _) => break,
-            Error(_) => {}
-            Incomplete(e) => return Incomplete(e),
+            Ok((_, _)) => break,
+            Err(Err::Incomplete(e)) => return Err(Err::Incomplete(e)),
+            Err(_) => {},
         };
+        // FIXME: warning: unused imports: `Context`, `Convert`, `Err` in try_parse!
+         #[allow(unused_imports)]
         let (rest, header) = try_parse!(input, message_header);
         headers[i] = header;
         input = rest;
@@ -509,7 +509,7 @@ pub fn parse_headers<'b: 'h, 'h>(mut input: &'b [u8],
     }
 
     shrink(&mut headers, i);
-    Done(input, headers)
+    Ok((input, headers))
 }
 
 
