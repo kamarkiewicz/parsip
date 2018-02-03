@@ -43,7 +43,7 @@ fn print_headers(headers: &[Header]) {
 req! {
     test_request_short_tortuous_invite,
     include_bytes!("requests/wsinv.dat"),
-    |buf| IResult::Done(&buf[857..], 857),
+    |buf| Ok((&buf[857..], 857)),
     |req| {
         assert_eq!(req.method.unwrap(), "INVITE");
         assert_eq!(req.path.unwrap(), "sip:vivekg@chair-dnrc.example.com;unknownparam");
@@ -59,7 +59,7 @@ req! {
 req! {
     test_request_wide_range_of_valid_characters,
     include_bytes!("requests/intmeth.dat"),
-    |buf| IResult::Done(&buf[681..], 681),
+    |buf| Ok((&buf[681..], 681)),
     |req| {
         assert_eq!(req.method.unwrap(), "!interesting-Method0123456789_*+`.%indeed\'~");
         assert_eq!(req.path.unwrap(),
@@ -77,7 +77,7 @@ req! {
 req! {
     test_request_valid_use_of_the_percent_escaping_mechanism,
     include_bytes!("requests/esc01.dat"),
-    |buf| IResult::Done(&buf[409..], 409),
+    |buf| Ok((&buf[409..], 409)),
     |req| {
         assert_eq!(req.method.unwrap(), "INVITE");
         assert_eq!(req.path.unwrap(), "sip:sips%3Auser%40example.com@example.net");
@@ -93,7 +93,7 @@ req! {
 req! {
     test_request_escaped_nulls_in_uris,
     include_bytes!("requests/escnull.dat"),
-    |buf| IResult::Done(&buf[365..], 365),
+    |buf| Ok((&buf[365..], 365)),
     |req| {
         assert_eq!(req.method.unwrap(), "REGISTER");
         assert_eq!(req.path.unwrap(), "sip:example.com");
@@ -109,7 +109,7 @@ req! {
 req! {
     test_request_use_of_percent_when_it_is_not_an_escape,
     include_bytes!("requests/esc02.dat"),
-    |buf| IResult::Done(&buf[445..], 445),
+    |buf| Ok((&buf[445..], 445)),
     |req| {
         assert_eq!(req.method.unwrap(), "RE%47IST%45R");
         assert_eq!(req.path.unwrap(), "sip:registrar.example.com");

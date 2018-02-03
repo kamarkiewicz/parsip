@@ -515,7 +515,7 @@ pub fn parse_headers<'b: 'h, 'h>(mut input: &'b [u8],
 
 #[cfg(test)]
 mod tests {
-    use super::{IResult, ErrorKind, Needed};
+    use super::{IResult, Err, ErrorKind, Needed};
     use super::{Request, Response, EMPTY_HEADER, SipVersion};
 
     const NUM_OF_HEADERS: usize = 4;
@@ -523,7 +523,7 @@ mod tests {
     macro_rules! req {
         ($name:ident, $buf:expr, |$arg:ident| $body:expr) => (
             req! {$name, $buf,
-                 |buf| IResult::Done(&buf[buf.len()..], buf.len()),
+                 |buf| Ok((&buf[buf.len()..], buf.len())),
                  |$arg| $body }
         );
         ($name:ident, $buf:expr,
@@ -552,7 +552,7 @@ mod tests {
     fn test_header_value_empty() {
         let buf = b"\r\nAccept: */*\r\n\r\n";
         assert_eq!(super::header_value(buf),
-                   IResult::Done(&buf[0..], &buf[..0]));
+                   Ok((&buf[0..], &buf[..0])));
     }
 
     req! {
@@ -615,14 +615,14 @@ mod tests {
     req! {
         test_request_partial,
         b"INVITE sip:callee@domain.com SIP/2.0\r\n\r",
-        |_buf| IResult::Incomplete(Needed::Size(40)),
+        |_buf| Err(Err::Incomplete(Needed::Size(40))),
         |_req| {}
     }
 
     req! {
         test_request_newlines,
         b"INVITE sip:callee@domain.com SIP/2.0\nHost: foo.bar\n\n",
-        |_buf| IResult::Error(error_position!(ErrorKind::CrLf, &_buf[36..])),
+        |_buf| Err(Err::Error(error_position!(&_buf[36..], ErrorKind::CrLf))),
         |_req| {}
     }
 
@@ -650,7 +650,7 @@ mod tests {
     req! {
         test_request_with_invalid_token_delimiter,
         b"GET\n/ SIP/2.0\r\nHost: foo.bar\r\n\r\n",
-        |_buf| IResult::Error(error_position!(ErrorKind::Char, &_buf[3..])),
+        |_buf| Err(Err::Error(error_position!(&_buf[3..], ErrorKind::Char))),
         |_req| {}
     }
 
@@ -670,7 +670,7 @@ mod tests {
     macro_rules! res {
         ($name:ident, $buf:expr, |$arg:ident| $body:expr) => (
             res! {$name, $buf,
-                 |buf| IResult::Done(&buf[buf.len()..], buf.len()),
+                 |buf| Ok((&buf[buf.len()..], buf.len())),
                  |$arg| $body }
         );
         ($name:ident, $buf:expr,
@@ -708,7 +708,7 @@ mod tests {
     res! {
         test_response_newlines,
         b"SIP/2.0 403 Forbidden\nServer: foo.bar\n\n",
-        |_buf| IResult::Error(error_position!(ErrorKind::CrLf, &_buf[21..])),
+        |_buf| Err(Err::Error(error_position!(&_buf[21..], ErrorKind::CrLf))),
         |_res| {}
     }
 
@@ -725,7 +725,7 @@ mod tests {
     res! {
         test_response_reason_missing_no_space,
         b"SIP/2.0 200\r\n\r\n",
-        |_buf| IResult::Error(error_position!(ErrorKind::Char, &_buf[11..])),
+        |_buf| Err(Err::Error(error_position!(&_buf[11..], ErrorKind::Char))),
         |res| {
             assert_eq!(res.version.unwrap(), SipVersion(2,0));
             assert_eq!(res.code.unwrap(), 200);
@@ -746,35 +746,35 @@ mod tests {
     res! {
         test_response_reason_with_obsolete_text_byte,
         RESPONSE_REASON_WITH_OBS_TEXT_BYTE,
-        |_buf| IResult::Error(error_position!(ErrorKind::MapRes, &_buf[12..])),
+        |_buf| Err(Err::Error(error_position!(&_buf[12..], ErrorKind::MapRes))),
         |_res| {}
     }
 
     res! {
         test_response_reason_with_nul_byte,
         b"SIP/2.0 200 \x00\r\n\r\n",
-        |_buf| IResult::Error(error_position!(ErrorKind::CrLf, &_buf[12..])),
+        |_buf| Err(Err::Error(error_position!(&_buf[12..], ErrorKind::CrLf))),
         |_res| {}
     }
 
     res! {
         test_response_version_missing_space,
         b"SIP/2.0",
-        |_buf| IResult::Incomplete(Needed::Size(8)),
+        |_buf| Err(Err::Incomplete(Needed::Size(8))),
         |_res| {}
     }
 
     res! {
         test_response_code_missing_space,
         b"SIP/2.0 200",
-        |_buf| IResult::Incomplete(Needed::Size(12)),
+        |_buf| Err(Err::Incomplete(Needed::Size(12))),
         |_res| {}
     }
 
     res! {
         test_response_empty_lines_prefix_lf_only,
         b"\n\nSIP/2.0 200 OK\n\n",
-        |_buf| IResult::Error(error_position!(ErrorKind::CrLf, &_buf[16..])),
+        |_buf| Err(Err::Error(error_position!(&_buf[16..], ErrorKind::CrLf))),
         |_res| {}
     }
 }

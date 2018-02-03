@@ -27,7 +27,7 @@ fn bench_parsip_request(b: &mut Bencher) {
     }; 16];
     let mut req = parsip::Request::new(&mut headers);
     b.iter(|| {
-               assert_eq!(req.parse(REQ), parsip::IResult::Done(&b""[..], REQ.len()));
+               assert_eq!(req.parse(REQ), Ok((&b""[..], REQ.len())));
            });
     b.bytes = REQ.len() as u64;
 }
