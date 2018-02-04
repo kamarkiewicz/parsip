@@ -629,7 +629,7 @@ mod tests {
     req! {
         test_request_partial,
         b"INVITE sip:callee@domain.com SIP/2.0\r\n\r",
-        |_buf| Err(Err::Incomplete(Needed::Size(40))),
+        |_buf| Err(Err::Incomplete(Needed::Size(2))),
         |_req| {}
     }
 
@@ -774,7 +774,7 @@ mod tests {
     res! {
         test_response_version_missing_space,
         b"SIP/2.0",
-        |_buf| Err(Err::Incomplete(Needed::Size(8))),
+        |_buf| Err(Err::Incomplete(Needed::Size(1))),
         |_res| {}
     }
 
