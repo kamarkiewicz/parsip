@@ -9,6 +9,7 @@ A push parser for the SIP protocol.
 Uses [nom for parser combinators](https://github.com/Geal/nom/) under the hood.
 
 Works with `no_std`, simply disable the `std` Cargo feature.
+Only on nightly channel for now, because `nom` requires `feature(alloc)`.
 
 ### Compliant with
 
