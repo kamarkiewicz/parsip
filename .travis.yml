@@ -40,6 +40,8 @@ script:
   - cargo build --verbose
   - cargo test --verbose
   - cargo bench --verbose
+  - cargo build --verbose --no-default-features
+  - cargo test --verbose --no-default-features
   - |
     set -e
     if [ "${TRAVIS_PULL_REQUEST_BRANCH:-$TRAVIS_BRANCH}" != "master" ]; then

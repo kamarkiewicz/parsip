@@ -6,8 +6,8 @@ license = "MIT"
 description = "A tiny, safe, speedy, zero-copy SIP parser. Uses nom."
 repository = "https://github.com/kamarkiewicz/parsip"
 documentation = "https://docs.rs/parsip"
-keywords = ["sip", "parser"]
-categories = ["network-programming", "parser-implementations"]
+keywords = ["sip", "parser", "no_std"]
+categories = ["network-programming", "no-std", "parser-implementations"]
 
 [features]
 default = ["std"]
