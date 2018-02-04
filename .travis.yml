@@ -32,21 +32,22 @@ addons:
 before_script:
   - export PATH=$HOME/.cargo/bin:$PATH
   - which cargo-install-update || cargo install cargo-update
+  - which cargo-benchcmp || cargo install cargo-benchcmp
   - which cargo-coverage || cargo install cargo-travis
   - cargo install-update -a # update outdated cached binaries
 
 script:
   - cargo build --verbose
   - cargo test --verbose
+  - cargo bench --verbose
   - |
     set -e
-    if [ "${TRAVIS_PULL_REQUEST_BRANCH:-$TRAVIS_BRANCH}" != "master" ] && [ $TRAVIS_RUST_VERSION == nightly ]; then
+    if [ "${TRAVIS_PULL_REQUEST_BRANCH:-$TRAVIS_BRANCH}" != "master" ]; then
       cargo bench --verbose | tee benches-variable
       git config remote.origin.fetch "+refs/heads/master:refs/remotes/origin/master"
       git remote update
       git checkout -b master origin/master
       cargo bench --verbose | tee benches-control
-      (which cargo-benchcmp || cargo install cargo-benchcmp)
       cargo benchcmp benches-control benches-variable
     fi
 

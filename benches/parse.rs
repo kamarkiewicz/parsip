@@ -1,5 +1,7 @@
-#![feature(test)]
-extern crate test;
+#[macro_use]
+extern crate bencher;
+
+use bencher::Bencher;
 
 extern crate parsip;
 
@@ -18,8 +20,7 @@ Content-Length: 0\r\n\r\n";
 
 
 
-#[bench]
-fn bench_parsip_request(b: &mut test::Bencher) {
+fn bench_parsip_request(b: &mut Bencher) {
     let mut headers = [parsip::Header {
         name: "",
         value: &[],
@@ -30,3 +31,6 @@ fn bench_parsip_request(b: &mut test::Bencher) {
            });
     b.bytes = REQ.len() as u64;
 }
+
+benchmark_group!(benches, bench_parsip_request);
+benchmark_main!(benches);

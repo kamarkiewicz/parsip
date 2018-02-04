@@ -17,6 +17,13 @@ std = ["nom/std"]
 version = "^3.1"
 default-features = false
 
+[dev-dependencies]
+bencher = "^0.1"
+
+[[bench]]
+name = "parse"
+harness = false
+
 [profile.bench]
 lto = true
 codegen-units = 1
