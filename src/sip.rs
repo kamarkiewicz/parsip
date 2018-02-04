@@ -1,4 +1,4 @@
-use nom::{digit, is_space, line_ending, crlf, rest};
+use nom::{is_digit, is_space, line_ending, crlf, rest};
 use std::{str, slice};
 
 /// A Result of any parsing action.
@@ -152,7 +152,7 @@ pub enum Error {
 /// let mut headers = [parsip::EMPTY_HEADER; 16];
 /// let mut req = parsip::Request::new(&mut headers);
 /// let res = req.parse(buf);
-/// if let parsip::IResult::Incomplete(_) = res {
+/// if let Err(parsip::Err::Incomplete(_)) = res {
 ///     match req.path {
 ///         Some(ref path) => {
 ///             // check router for path.
@@ -305,7 +305,7 @@ pub struct SipVersion(pub u8, pub u8);
 /// Get one digit from input and return it as `u8` (ie. `b'7'` becomes `7`)
 named!(#[inline], single_digit<&[u8], u8>,
     map!(
-        verify!(take!(1), |d: &[u8]| ::nom::is_digit(d[0])),
+        verify!(take!(1), |d: &[u8]| is_digit(d[0])),
         |a| a[0] - b'0'
     )
 );
@@ -395,7 +395,7 @@ named!(#[inline], parse_reason<&[u8], &str>,
 /// > ```
 named!(#[inline], parse_code<&[u8], u16>,
     map!(
-        flat_map!(take!(3), digit),
+        verify!(take!(3), |arr: &[u8]| is_digit(arr[0]) && is_digit(arr[1]) && is_digit(arr[2])),
         |arr| (arr[0] - b'0') as u16 * 100 + (arr[1] - b'0') as u16 * 10 +
               (arr[2] - b'0') as u16
     )
@@ -485,10 +485,10 @@ named!(message_header<Header>, do_parse!(
 /// let buf = b"Host: foo.bar\r\nAccept: */*\r\n\r\n";
 /// let mut headers = [parsip::EMPTY_HEADER; 4];
 /// assert_eq!(parsip::parse_headers(buf, &mut headers),
-///            parsip::IResult::Done(&buf[28..], &[
+///            Ok((&buf[28..], &[
 ///                parsip::Header { name: "Host", value: b"foo.bar" },
 ///                parsip::Header { name: "Accept", value: b"*/*" }
-///            ][..]));
+///            ][..])));
 /// ```
 pub fn parse_headers<'b: 'h, 'h>(mut input: &'b [u8],
                                  mut headers: &'h mut [Header<'b>])
@@ -781,7 +781,7 @@ mod tests {
     res! {
         test_response_code_missing_space,
         b"SIP/2.0 200",
-        |_buf| Err(Err::Incomplete(Needed::Size(12))),
+        |_buf| Err(Err::Incomplete(Needed::Size(1))),
         |_res| {}
     }
 
