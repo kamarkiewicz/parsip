@@ -305,7 +305,7 @@ pub struct SipVersion(pub u8, pub u8);
 /// Get one digit from input and return it as `u8` (ie. `b'7'` becomes `7`)
 named!(#[inline], single_digit<&[u8], u8>,
     map!(
-        flat_map!(take!(1), digit),
+        verify!(take!(1), |d: &[u8]| ::nom::is_digit(d[0])),
         |a| a[0] - b'0'
     )
 );
@@ -546,6 +546,20 @@ mod tests {
             }
         }
         )
+    }
+
+    #[test]
+    fn test_single_digit() {
+        let buf = b"2";
+        assert_eq!(call!(buf.as_ref() , super::single_digit),
+                   Ok((&buf[1..], 2)));
+    }
+
+    #[test]
+    fn test_parse_version() {
+        let buf = b"SIP/2.0\r\n";
+        assert_eq!(super::parse_version(buf),
+                   Ok((&buf[7..], SipVersion(2, 0))));
     }
 
     #[test]
