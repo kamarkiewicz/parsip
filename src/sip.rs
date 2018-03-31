@@ -188,25 +188,28 @@ impl<'h, 'b> Request<'h, 'b> {
         }
     }
 
+    /// Parse!
+    pub fn parse(&mut self, buf: &'b [u8]) -> IResult<&'b [u8], usize> {
+        let begin = buf.len();
+        let (buf, _) = skip_empty_lines(buf)?;
+        let (buf, _) = self.parse_request_line(buf)?;
+        let (buf, headers_len) = map!(buf,
+                                      call!(parse_headers, self.headers),
+                                      |headers| headers.len())?;
+        shrink(&mut self.headers, headers_len);
+        let (buf, _) = crlf(buf)?;
+        Ok((buf, begin - buf.len()))
+    }
+
     /// > ```notrust
     /// > Request-Line  =  Method SP Request-URI SP SIP-Version CRLF
     /// > ```
-    // TODO: extract parse_request_line method when figure out how
-    pub fn parse(&mut self, buf: &'b [u8]) -> IResult<&'b [u8], usize> {
+    fn parse_request_line(&mut self, buf: &'b [u8]) -> IResult<&'b [u8], ()> {
         do_parse!(buf,
-            begin: rest_len >>
-            skip_empty_lines >>
             map!(parse_method, |method| self.method = Some(method)) >> char!(' ') >>
             map!(parse_request_uri, |path| self.path = Some(path)) >> char!(' ') >>
             map!(parse_version, |version| self.version = Some(version)) >> crlf >>
-            headers_len: map!(call!(parse_headers, self.headers), |headers| headers.len()) >>
-            crlf >>
-            end: rest_len >>
-            ({
-                shrink(&mut self.headers, headers_len);
-                begin - end
-            })
-        )
+        ())
     }
 }
 
