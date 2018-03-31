@@ -17,7 +17,7 @@ macro_rules! req {
         assert_eq!(result, res_closure($buf));
         closure(req);
 
-        fn res_closure($res_arg: &[u8]) -> IResult<&[u8], usize> {
+        fn res_closure($res_arg: &[u8]) -> IResult<&[u8], usize, parsip::ParseError> {
             $res_body
         }
 

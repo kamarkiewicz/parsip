@@ -1,5 +1,6 @@
 use nom::{is_digit, is_space, line_ending, crlf, rest};
 use std::{str, slice};
+use std::convert::From;
 
 /// A Result of any parsing action.
 ///
@@ -120,9 +121,8 @@ fn is_header_value(b: u8) -> bool {
 }
 
 /// An error in parsing.
-/// TODO: for now this is unused; use this custom error type
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
-pub enum Error {
+pub enum ParseError {
     /// Invalid byte in header name.
     HeaderName,
     /// Invalid byte in header value.
@@ -137,6 +137,21 @@ pub enum Error {
     TooManyHeaders,
     /// Invalid byte in SIP version.
     Version,
+}
+
+impl From<u32> for ParseError {
+  fn from(error: u32) -> Self {
+    use ParseError::*;
+    match error {
+        0 => HeaderName,
+        1 => HeaderValue,
+        2 => NewLine,
+        3 => Status,
+        4 => TooManyHeaders,
+        5 => Version,
+        _ => Token
+    }
+  }
 }
 
 /// A parsed Request.
@@ -192,8 +207,8 @@ impl<'h, 'b> Request<'h, 'b> {
     /// > Request-Line  =  Method SP Request-URI SP SIP-Version CRLF
     /// > ```
     // TODO: extract parse_request_line method when figure out how
-    pub fn parse(&mut self, buf: &'b [u8]) -> IResult<&'b [u8], usize> {
-        do_parse!(buf,
+    pub fn parse(&mut self, buf: &'b [u8]) -> IResult<&'b [u8], usize, ParseError> {
+        fix_error!(buf, ParseError, do_parse!(
             begin: rest_len >>
             skip_empty_lines >>
             map!(parse_method, |method| self.method = Some(method)) >> char!(' ') >>
@@ -206,7 +221,7 @@ impl<'h, 'b> Request<'h, 'b> {
                 shrink(&mut self.headers, headers_len);
                 begin - end
             })
-        )
+        ))
     }
 }
 
@@ -251,8 +266,8 @@ impl<'h, 'b> Response<'h, 'b> {
     /// > Status-Line     =  SIP-Version SP Status-Code SP Reason-Phrase CRLF
     /// > ```
     // TODO: extract parse_status_line method when figure out how
-    pub fn parse(&mut self, buf: &'b [u8]) -> IResult<&'b [u8], usize> {
-        do_parse!(buf,
+    pub fn parse(&mut self, buf: &'b [u8]) -> IResult<&'b [u8], usize, ParseError> {
+        fix_error!(buf, ParseError, do_parse!(
             begin: rest_len >>
             skip_empty_lines >>
             map!(parse_version, |version| self.version = Some(version)) >> char!(' ') >>
@@ -265,7 +280,7 @@ impl<'h, 'b> Response<'h, 'b> {
                 shrink(&mut self.headers, headers_len);
                 begin - end
             })
-        )
+        ))
     }
 }
 
@@ -516,7 +531,7 @@ pub fn parse_headers<'b: 'h, 'h>(mut input: &'b [u8],
 #[cfg(test)]
 mod tests {
     use super::{IResult, Err, ErrorKind, Needed};
-    use super::{Request, Response, EMPTY_HEADER, SipVersion};
+    use super::{ParseError, Request, Response, EMPTY_HEADER, SipVersion};
 
     const NUM_OF_HEADERS: usize = 4;
 
@@ -537,7 +552,7 @@ mod tests {
             assert_eq!(result, res_closure($buf));
             closure(req);
 
-            fn res_closure($res_arg: &[u8]) -> IResult<&[u8], usize> {
+            fn res_closure($res_arg: &[u8]) -> IResult<&[u8], usize, ParseError> {
                 $res_body
             }
 
@@ -698,7 +713,7 @@ mod tests {
             assert_eq!(result, res_closure($buf));
             closure(res);
 
-            fn res_closure($res_arg: &[u8]) -> IResult<&[u8], usize> {
+            fn res_closure($res_arg: &[u8]) -> IResult<&[u8], usize, ParseError> {
                 $res_body
             }
 
