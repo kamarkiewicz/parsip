@@ -15,7 +15,7 @@ std = ["nom/std"]
 
 [dependencies.nom]
 git = "https://github.com/Geal/nom.git"
-rev = "dd33867"
+rev = "fb11984"
 default-features = false
 
 [dev-dependencies]
