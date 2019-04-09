@@ -17,5 +17,6 @@ mod std {
 }
 
 mod sip;
+mod lookup;
 
 pub use sip::*;
